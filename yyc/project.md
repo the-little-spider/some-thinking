@@ -37,8 +37,10 @@
   * 数据库返回结果，映射到实体：
     要么实体用下划线形式的属性名
     要么mybatis加个配置，以springboot为例：
+    ~~~
       mybatis:
         configuration:
           mapUnderscoreToCamelCase: true
+    ~~~
   * mapper映射传入参数为对象时：
     在对象的属性上添加@JsonProperty注解没有用，需要mapper.xml里的传入字段名是跟对象属性名是一样的
