@@ -31,3 +31,14 @@
   
   **ps**：**question**：最近发现个有趣的问题，日志压测的时候，13号压测发现日志压缩的时候都是10号的日志
     原因：logback一直用的一个线程写，意思就是，从10号项目启动的时候，这个日志文件就在编辑状态，所以日志文件的编辑日期一直停留在10号。
+
+#### 5
+* **question**：关于mybatis的映射问题，实体属性是驼峰，数据库字段是下划线。
+  * 数据库返回结果，映射到实体：
+    要么实体用下划线形式的属性名
+    要么mybatis加个配置，以springboot为例：
+      mybatis:
+        configuration:
+          mapUnderscoreToCamelCase: true
+  * mapper映射传入参数为对象时：
+    在对象的属性上添加@JsonProperty注解没有用，需要mapper.xml里的传入字段名是跟对象属性名是一样的
