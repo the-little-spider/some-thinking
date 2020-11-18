@@ -7,6 +7,7 @@
 #### 2
 * **question**：批量导入
   在postman中调用批量导入接口时，没有问题。但是在页面（前端）调用的时候出现nginx的错误，'An error occurred.'。
+  ##### 未解决
 
 #### 3
 * **question**：关于Spring的@Async注解
