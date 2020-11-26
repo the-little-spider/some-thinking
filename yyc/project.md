@@ -48,7 +48,9 @@
     
 #### 6
 * **question**：logback的配置项maxHistory和totalSizeCap没有生效。  
-  原因：滚动策略的单位是按月份，单位来自fileNamePattern中的日期格式，
+  原因：滚动策略的单位是按月份，fileNamePattern的参数yyyy-MM，没有aux参数的时候默认用第一个做周期单位  
+  fileNamePattern配置中添加多个%d的日期符号，但是只能有一个是主要的，其它的只能做为辅助(auxiliary)。
+              在RollingCalendar类中，日志的文件滚动方式就是根据主%d那个日期判断的
   * xml配置，滚动策略
     ~~~
     <rollingPolicy class="ch.qos.logback.core.rolling.helper.SizeAndTimeBasedArchiveRemover">
