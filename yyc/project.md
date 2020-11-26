@@ -11,7 +11,7 @@
 
 #### 3
 * **question**：关于Spring的@Async注解
-  @Async 默认使用SimpleAsyncTaskExecutor，项目中使用默认的，生产上线程编号达到两百万时才被人发现，紧急处理
+  @Async 默认使用SimpleAsyncTaskExecutor，项目中使用默认的，生产上线程编号达到两百万时才被人发现，紧急处理（性能影响，因为每次都是新建线程销毁线程，资源损耗）
   Spring 已经实现的线程池
   1. SimpleAsyncTaskExecutor：不是真的线程池，这个类不重用线程，默认每次调用都会创建一个新的线程。
   2. SyncTaskExecutor：这个类没有实现异步调用，只是一个同步操作。只适用于不需要多线程的地方。
@@ -47,5 +47,108 @@
     在对象的属性上添加@JsonProperty注解没有用，需要mapper.xml里的传入字段名是跟对象属性名是一样的
     
 #### 6
-* **question**：logback的配置项totalSizeCap没有生效。  
-  * 
+* **question**：logback的配置项maxHistory和totalSizeCap没有生效。  
+  原因：滚动策略的单位是按月份，单位来自fileNamePattern中的日期格式，
+  * xml配置，滚动策略
+    ~~~
+    <rollingPolicy class="ch.qos.logback.core.rolling.helper.SizeAndTimeBasedArchiveRemover">
+              日志文件打包名匹配
+              可以在fileNamePattern配置中添加多个%d的日期符号，但是只能有一个是主要的，其它的只能做为辅助(auxiliary)。
+              在RollingCalendar类中，日志的文件滚动方式就是根据主%d那个日期判断的。
+              <fileNamePattern>${LOG_HOME}/%d{yyyy-MM,aux}/run.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+              最大文件大小
+              <maxFileSize>5MB</maxFileSize>
+              最大留存期，可以保留的时间范围
+              <maxHistory>30</maxHistory>
+              总共日志文件大小
+              <totalSizeCap>200MB</totalSizeCap>
+              启动的时候是否清除历史文件（即项目启动的时候是否删除日志文件夹里之前的日志文件）
+              <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+    ~~~
+  * 滚动策略，默认的滚动策略是
+    
+    ~~~
+    SizeAndTimeBasedRollingPolicy
+    
+    只简单校验了maxFileSize和totalSizeCap
+    
+    public void start() {
+        SizeAndTimeBasedFNATP<E> sizeAndTimeBasedFNATP = new SizeAndTimeBasedFNATP(Usage.EMBEDDED);
+        if (this.maxFileSize == null) {
+            this.addError("maxFileSize property is mandatory.");
+        } else {
+            this.addInfo("Archive files will be limited to [" + this.maxFileSize + "] each.");
+            sizeAndTimeBasedFNATP.setMaxFileSize(this.maxFileSize);
+            this.timeBasedFileNamingAndTriggeringPolicy = sizeAndTimeBasedFNATP;
+            // totalSizeCap的大小不能比maxFileSize小
+            if (!this.isUnboundedTotalSizeCap() && this.totalSizeCap.getSize() < this.maxFileSize.getSize()) {
+                this.addError("totalSizeCap of [" + this.totalSizeCap + "] is smaller than maxFileSize [" + this.maxFileSize + "] which is non-sensical");
+            } else {
+                // 调用父类的的start方法
+                super.start();
+            }
+        }
+    }
+    
+    
+    它的父类TimeBasedRollingPolicy
+    
+    // 滚动方法
+    rollover()
+    if (this.archiveRemover != null) {
+       Date now = new Date(this.timeBasedFileNamingAndTriggeringPolicy.getCurrentTime());
+       // cleanAsynchronously方法根据当前时间异步删除日志文件
+       this.cleanUpFuture = this.archiveRemover.cleanAsynchronously(now);
+    }
+    
+    
+    TimeBasedArchiveRemover
+    
+    // capTotalSize方法
+    void capTotalSize(Date now) {
+        long totalSize = 0L;
+        long totalRemoved = 0L;
+
+        // 根据偏移单位和最大留存期循环判断
+        for(int offset = 0; offset < this.maxHistory; ++offset) {
+            // 关键方法，获得具体日期（里面有对单位的判断）
+            Date date = this.rc.getEndOfNextNthPeriod(now, -offset);
+            // 获取在这个周期内的文件
+            File[] matchingFileArray = this.getFilesInPeriod(date);
+            this.descendingSortByLastModified(matchingFileArray);
+            File[] arr$ = matchingFileArray;
+            // 周期内包含的文件数
+            int len$ = matchingFileArray.length;
+            // 遍历文件
+            for(int i$ = 0; i$ < len$; ++i$) {
+                File f = arr$[i$];
+                long size = f.length();
+                // 总文件大小+当前文件的大小 > 设置的总大小时 删除该文件
+                if (totalSize + size > this.totalSizeCap) {
+                    this.addInfo("Deleting [" + f + "]" + " of size " + new FileSize(size));
+                    totalRemoved += size;
+                    f.delete();
+                }
+
+                totalSize += size;
+            }
+        }
+
+        this.addInfo("Removed  " + new FileSize(totalRemoved) + " of files");
+    }
+    
+    
+    RollingCalendar
+    
+    // periodicityType 单位，根据fileNamePattern配置项获取
+    public Date getEndOfNextNthPeriod(Date now, int periods) {
+        return innerGetEndOfNextNthPeriod(this, this.periodicityType, now, periods);
+    }
+    
+    
+    ~~~
+    
+  
+  
+  
