@@ -104,6 +104,10 @@
        this.cleanUpFuture = this.archiveRemover.cleanAsynchronously(now);
     }
     
+    调用cleanAsynchronously里
+    实现 TimeBasedArchiveRemover.ArhiveRemoverRunnable runnable = new TimeBasedArchiveRemover.ArhiveRemoverRunnable(now);
+    实现ArhiveRemoverRunnable类时，里面调用了capTotalSize方法
+    
     
     TimeBasedArchiveRemover
     
@@ -147,7 +151,6 @@
     public Date getEndOfNextNthPeriod(Date now, int periods) {
         return innerGetEndOfNextNthPeriod(this, this.periodicityType, now, periods);
     }
-    
     
     ~~~
     
