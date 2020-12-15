@@ -153,7 +153,20 @@
     }
     
     ~~~
-    
   
+ #### 7
+  * **question**：返回404时，不希望出现多余的东西，比如说path
+    * 添加配置项：spring.mvc.throw-exception-if-no-handler-found=true
+                 spring.resources.add-mappings=false
+    ( spring.mvc.throw-exception-if-no-handler-found=true
+    
+      该参数对应的就是DispatcherServlet中的throwExceptionIfNoHandlerFound
+
+      再在全局异常处理中利用@ExceptionHandler捕获NoHandlerFoundException就可以了
+
+      但是并没有生效，原因是Spring会默认给你加上ResourceHttpRequestHandler这个handler，也就不会出现noHandler的情况了，该handler是用来处理资源使用的
+
+      spring.resources.add-mappings=false )
+    
   
   
