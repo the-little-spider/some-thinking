@@ -169,4 +169,20 @@
       spring.resources.add-mappings=false )
     
   
-  
+  #### 8
+  * **question**：请求中包含文件时，content-type是multipart/form-data，报错：Content type 'multipart/form-data;boundary=----WebKitFormBoundaryIBTZ4p7VXFBcieRt;charset=UTF-8' not supported
+    原因： multipart/form-data 类型的请求不能使用 @RequestBody 去接受其它参数
+    解决方式：去掉@RequestBody，但是实体类中的属性名必须与入参相同，@JsonProperty无法使用
+    
+    GET、POST方式提时， 根据request header Content-Type的值来判断:  
+    application/x-www-form-urlencoded， 可选（即非必须，因为这种情况的数据@RequestParam, @ModelAttribute也可以处理，当然@RequestBody也能处理）；  
+    multipart/form-data, 不能处理（即使用@RequestBody不能处理这种格式的数据）；  
+    其他格式， 必须（其他格式包括application/json, application/xml等。这些格式的数据，必须使用@RequestBody来处理）；  
+    
+    PUT方式提交时， 根据request header Content-Type的值来判断:  
+    application/x-www-form-urlencoded， 必须；  
+    multipart/form-data, 不能处理；  
+    其他格式， 必须；  
+    
+    说明：request的body部分的数据编码格式由header部分的Content-Type指定；
+
