@@ -185,4 +185,10 @@
     其他格式， 必须；  
     
     说明：request的body部分的数据编码格式由header部分的Content-Type指定；
-
+  
+  
+  #### 9
+  * **question**：数据库表死锁
+    原因：insert into xxxx  values (xxxx) on duplicate key update xxxxx
+    insert ... on duplicate key 在执行时，innodb引擎会先判断插入的行为是否产生重复key错误，如果存在，对该数据行加上S（共享锁）锁，如果返回该行数据给mysql，然后mysql执行完duplicate后的update操作，然后对该记录加上X（互斥锁）锁，最后进行update写入。
+    
